@@ -1,0 +1,40 @@
+# Archivos de CLion
+.idea/
+cmake-build-*/
+cmake-build-debug/
+cmake-build-release/
+CMakeFiles/
+Makefile
+CMakeCache.txt
+build/
+*.iml
+
+# Archivos temporales / del sistema
+*.log
+*.out
+*.o
+*.obj
+*.exe
+*.bin
+*.class
+*.pyc
+*.pyo
+*.swp
+*~
+
+# Archivos de ejecución
+a.out
+*.so
+*.dll
+*.dylib
+
+# Archivos de pruebas
+test-output/
+*.test
+
+# Backups
+*.bak
+*.tmp
+
+# Otros directorios típicos que pueden generarse
+.vscode/
