@@ -53,8 +53,8 @@ void* request_file(void* arg) {
     send(sock, request, strlen(request), 0);
 
     // Preparar nombre del archivo de salida, uno por hilo
-    char output_name[64];
-    snprintf(output_name, sizeof(output_name), "descarga_%d.dat", args->id); // descarga_0.dat
+    char output_name[300];
+    snprintf(output_name, sizeof(output_name), "descarga_%d_%s", args->id, args->filename);
 
     // Abrir archivo local para guardar la respuesta del servidor
     FILE* output = fopen(output_name, "wb");

@@ -38,7 +38,7 @@ int main() {
             }
             _exit(0); // salida
         } else if (pid > 0) {
-            sleep(2); // Espera para que el servidor arranque
+            sleep(3); // Espera para que el servidor arranque
             run_client_stress_test();
 
         } else {

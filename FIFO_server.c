@@ -14,7 +14,7 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 4096
-#define FILES_DIR "archivos/"
+#define FILES_DIR "./archivos/"
 
 void fifo_server(int client_socket) {
     char buffer[BUFFER_SIZE];
@@ -74,6 +74,8 @@ void run_fifo_server (int puerto) {
     socklen_t addr_len = sizeof(client_addr);
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1;
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // cerrar el puerto inmediatamente
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(puerto);
     server_addr.sin_addr.s_addr = INADDR_ANY;

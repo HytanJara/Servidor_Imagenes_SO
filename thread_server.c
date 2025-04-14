@@ -167,10 +167,10 @@ void run_thread_server() {
             free(pclient);
         }
 
-        // Se libera el hilo automáticamente al terminar (no se necesita join)
+        // Se libera el hilo automáticamente al terminar
         pthread_detach(tid);
     }
 
-    // Cierra el socket del servidor (nunca se alcanza en práctica)
+    // Cierra el socket del servidor
     close(server_fd);
 }
