@@ -6,4 +6,5 @@ set(CMAKE_C_STANDARD 11)
 add_executable(Servidor_Imagenes_SO
         thread_server.c
         main.c
-        log_utils.c)
+        log_utils.c
+        " cliente_multihilo.c")
