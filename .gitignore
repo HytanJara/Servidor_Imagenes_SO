@@ -1,4 +1,4 @@
-# Archivos de CLion
+# archivos de CLion
 .idea/
 cmake-build-*/
 cmake-build-debug/
@@ -9,7 +9,7 @@ CMakeCache.txt
 build/
 *.iml
 
-# Archivos temporales / del sistema
+# archivos temporales / del sistema
 *.log
 *.out
 *.o
@@ -22,13 +22,13 @@ build/
 *.swp
 *~
 
-# Archivos de ejecución
+# archivos de ejecución
 a.out
 *.so
 *.dll
 *.dylib
 
-# Archivos de pruebas
+# archivos de pruebas
 test-output/
 *.test
 
