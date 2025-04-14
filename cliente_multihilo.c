@@ -93,29 +93,52 @@ void* request_file(void* arg) {
 
 // Función que lanza múltiples hilos de descarga para probar el servidor en simultáneo
 void run_client_stress_test() {
-    int num_threads;         // Cantidad de hilos que se desean lanzar
-    char filename[256];      // Nombre del archivo que se quiere solicitar
+    // Arreglo para los nombres de archivos ingresados por el usuario
+    char input[1024];
+    char* tokens[100]; // Hasta 100 archivos separados por coma
+    int num_archivos = 0; // Cantidad de archivos únicos
+    int repeticiones = 0; // Cantidad de solicitudes por archivo
 
     // Obtener entrada del usuario
-    printf("Ingrese el nombre del archivo a solicitar (ej: imagen.jpg): ");
-    scanf("%255s", filename);
+    printf("Ingrese el/los nombre(s) del/los archivo(s) a solicitar separados por comas (ej: imagen.jpg,documento.txt): ");
+    getchar(); // limpiar buffer si viene de un scanf anterior
+    fgets(input, sizeof(input), stdin);
 
-    printf("Ingrese la cantidad de solicitudes simultáneas: ");
-    scanf("%d", &num_threads);
+    // Eliminar el salto de línea al final si existe
+    input[strcspn(input, "\n")] = 0;
+
+    // Separar los nombres usando la coma como delimitador
+    char* token = strtok(input, ",");
+    while (token != NULL && num_archivos < 100) {
+        // Saltar espacios en blanco al inicio del nombre
+        while (*token == ' ') token++;
+        tokens[num_archivos++] = token;
+        token = strtok(NULL, ",");
+    }
+
+    // Pedir cuántas veces se desea solicitar cada archivo
+    printf("Ingrese la cantidad de solicitudes por archivo: ");
+    scanf("%d", &repeticiones);
+
+    int num_threads = num_archivos * repeticiones; // Cantidad total de hilos que se desean lanzar
 
     // Arreglo para guardar los identificadores de los hilos
     pthread_t threads[num_threads];
 
     // Crear hilos
-    for (int i = 0; i < num_threads; i++) {
-        ThreadArgs* args = malloc(sizeof(ThreadArgs));         // Asignar memoria para los argumentos
-        args->id = i;
-        strncpy(args->filename, filename, sizeof(args->filename));
+    int hilo_index = 0;
+    for (int i = 0; i < num_archivos; i++) {
+        for (int j = 0; j < repeticiones; j++) {
+            ThreadArgs* args = malloc(sizeof(ThreadArgs));         // Asignar memoria para los argumentos
+            args->id = hilo_index;
+            strncpy(args->filename, tokens[i], sizeof(args->filename));
 
-        // Lanzar hilo
-        if (pthread_create(&threads[i], NULL, request_file, args) != 0) {
-            perror("Error creando hilo");
-            free(args);
+            // Lanzar hilo
+            if (pthread_create(&threads[hilo_index], NULL, request_file, args) != 0) {
+                perror("Error creando hilo");
+                free(args);
+            }
+            hilo_index++;
         }
     }
 
