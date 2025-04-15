@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <limits.h> // para el path_max
+
 //----------------------------------
 
 //DEFINES
@@ -60,7 +62,7 @@ void run_fork_server(int port) {
     server_addr.sin_port = htons(port);
 
     //Enlazar socket
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) {
+    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr))) {
         perror("Error con el enlaze del socket");
         exit(EXIT_FAILURE);
     }

@@ -10,7 +10,6 @@ add_executable(Servidor_Imagenes_SO main.c
         thread_server.c
         cliente_multihilo.c
         thread_server.h
-        log_utils.h)
-        log_utils.h
+        FORK_server.c
         FORK_server.h
-        FORK_server.c)
+        log_utils.h)
