@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <limits.h> // para el path_max
-
+#include "log_utils.h"
 //----------------------------------
 
 //DEFINES
@@ -48,7 +48,7 @@ void run_fork_server(int port) {
 
     //Cracion del socket
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Error a la hora de crear el socket");
+        log_error("Error al crear el socket: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -63,35 +63,37 @@ void run_fork_server(int port) {
 
     //Enlazar socket
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr))) {
-        perror("Error con el enlaze del socket");
+        log_error("Error al enlazar el socket: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     //Escuchar conexiones
     listen(server_socket, MAX_CLIENTS);
-    printf("[FORK] Escuchando en puerto %d\n", port);
-    printf("Tranajando con los archivos de la direccion: %s\n", FILES_DIR);
+    log_info("[FORK] Escuchando en puerto %d", port);
+    log_info("Trabajando con los archivos de la dirección: %s", FILES_DIR);
 
     while (1) {
         client_len = sizeof(client_addr);
         client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
         if (client_socket < 0) {
             if (errno == EINTR) continue;
-            perror("Error con la conexión");
+            log_error("Error con la conexión: %s", strerror(errno));
             continue;
         }
 
-        printf("Conexión aceptada %s:%d\n",
-               inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        log_info("Conexión aceptada %s:%d",
+                 inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         // Manejar cliente en proceso hijo
         if ((pid = fork()) == 0) {
+            log_info("Proceso hijo creado con PID %d para manejar al cliente", getpid());
             close(server_socket);
             handle_client(client_socket);
             close(client_socket);
+            log_info("Proceso hijo %d finalizado", getpid());
             exit(EXIT_SUCCESS);
         } else if (pid < 0) {
-            perror("Error en fork()");
+            log_error("Error en fork(): %s", strerror(errno));
         }
         close(client_socket);
     }
@@ -101,7 +103,7 @@ static void handle_client(int client_socket) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read = read(client_socket, buffer, BUFFER_SIZE - 1);
     if (bytes_read <= 0) {
-        perror("Error con la solicitud");
+        log_error("Error con la solicitud del cliente: %s", strerror(errno));
         return;
     }
     buffer[bytes_read] = '\0';
@@ -110,12 +112,15 @@ static void handle_client(int client_socket) {
     char archivo[256];
     sscanf(buffer, "GET /%255s HTTP", archivo);
 
+    log_info("Solicitud recibida: %s", archivo);
+
     //Llama el FILES_DIR para los archivos
     char ruta[512];
     snprintf(ruta, sizeof(ruta), "%s%s", FILES_DIR, archivo);
 
     //Validaciones
     if (!validate_path(ruta)) {
+        log_error("Acceso denegado (fuera del directorio permitido): %s", ruta);
         send_error(client_socket, 403, "Forbidden");
         return;
     }
@@ -127,17 +132,20 @@ static void handle_client(int client_socket) {
 static void send_file(int client_socket, const char *ruta) {
     struct stat file_stat;
     if (stat(ruta, &file_stat) < 0) {
+        log_error("Archivo no encontrado: %s", ruta);
         send_error(client_socket, 404, "Not Found");
         return;
     }
 
     if (S_ISDIR(file_stat.st_mode)) {
+        log_error("Se solicitó un directorio en lugar de un archivo: %s", ruta);
         send_error(client_socket, 400, "Bad Request");
         return;
     }
 
     int fd = open(ruta, O_RDONLY);
     if (fd < 0) {
+        log_error("Error al abrir archivo %s: %s", ruta, strerror(errno));
         send_error(client_socket, 500, "Internal Server Error");
         return;
     }
@@ -152,13 +160,14 @@ static void send_file(int client_socket, const char *ruta) {
         file_stat.st_size);
 
     write(client_socket, header, header_len);
+    log_info("Enviando archivo: %s (%ld bytes)", ruta, file_stat.st_size);
 
     //Enviar archivos mediante BUFFER
     char file_buffer[BUFFER_SIZE];
     ssize_t bytes_read;
     while ((bytes_read = read(fd, file_buffer, BUFFER_SIZE)) > 0) {
         if (write(client_socket, file_buffer, bytes_read) != bytes_read) {
-            perror("Error al enviar archivos");
+            log_error("Error al enviar archivo al cliente");
             break;
         }
     }
@@ -185,7 +194,6 @@ static int validate_path(const char *filepath) {
 
     char real_files_dir[PATH_MAX];
     if (!realpath(FILES_DIR, real_files_dir)) return 0;
-
 
     return strncmp(real_files_dir, real_path, strlen(real_files_dir)) == 0;
 }

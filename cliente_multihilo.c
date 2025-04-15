@@ -86,7 +86,7 @@ void* request_file(void* arg) {
     // Cerrar archivo y socket, liberar memoria
     fclose(output);
     close(sock);
-    printf("[Hilo %d] Descarga completada: %s\n", args->id, output_name);
+    printf("[Hilo/Proceso %d] Descarga completada: %s\n", args->id, output_name);
     free(arg);
     pthread_exit(NULL);
 }
